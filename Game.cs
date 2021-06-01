@@ -1,27 +1,128 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Game : MonoBehaviour
 {
     public static int gridWidth = 10;
-    public static int gridheight = 20;
+    public static int gridHeight = 20;
 
-
+    public static Transform[,] grid = new Transform[gridWidth, gridHeight];
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        SpawnNextTetrimino();
     }
 
-    // Update is called once per frame
-    void Update()
+    public bool IsRowFullAt(int y)
     {
-        
+        for (int x = 0; x < gridWidth; ++x)
+        {
+            if (grid[x, y] == null)
+                return false;
+        }
+        return true;
     }
 
-    public bool CheckIsInsideGrid(Vector2 position)
+    public void DeleteMinoAt(int y)
+    {
+        for (int x = 0; x < gridWidth; ++x)
+        {
+            Destroy(grid[x, y].gameObject);
+            grid[x, y] = null;
+        }
+    }
+
+    public void MoveRowDown(int y)
+    {
+        for (int x = 0; x < gridWidth; ++x)
+        {
+            if (grid[x,y] != null)
+            {
+                grid[x, y - 1] = grid[x, y];
+                grid[x, y] = null;
+                grid[x, y - 1].position += Vector3.down;
+            }
+        }
+    }
+
+    public void MoveAllRowsDown(int y)
+    {
+        for (int i = y; i < gridHeight; ++i)
+        {
+            MoveRowDown(i);
+        }
+    }
+
+    public void DeleteRow()
+    {
+        for (int y = 0; y < gridHeight; ++y)
+        {
+            if (IsRowFullAt(y))
+            {
+                DeleteMinoAt(y);
+                MoveAllRowsDown(y + 1);
+                --y;
+            }
+        }
+    }
+
+
+
+    public void UpdateGrid(Tetrimino tetrimino)
+    {
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                if (grid[x, y] != null)
+                    if (grid[x, y].parent == tetrimino.transform)
+                            grid[x, y] = null;
+            }
+        }
+
+        foreach (Transform mino in tetrimino.transform)
+        {
+            Vector2Int position = Vector2Int.RoundToInt(mino.position);
+
+            if (position.y < gridHeight)
+                grid[position.x, position.y] = mino;
+        }
+    }
+
+    public Transform GetTransformAtGridPosition(Vector2Int position)
+    {
+        return position.y > (gridHeight - 1) ? null : grid[(int)position.x, (int)position.y];
+    }
+
+    public void SpawnNextTetrimino()
+    {
+        GameObject nextTetrimino = (GameObject)Instantiate(Resources.Load(GetRandomTetrimino()), new Vector2(4.0f, 20.0f), Quaternion.identity);
+    }
+
+    private string GetRandomTetrimino()
+    {
+        int randomTetrimino = Random.Range(1, 8);
+
+        string randomTetriminoName = "";
+
+        switch (randomTetrimino)
+        {
+            case 1: randomTetriminoName = "Prefabs/Tetrimino_J"; break;
+            case 2: randomTetriminoName = "Prefabs/Tetrimino_L"; break;
+            case 3: randomTetriminoName = "Prefabs/Tetrimino_Long"; break;
+            case 4: randomTetriminoName = "Prefabs/Tetrimino_S"; break;
+            case 5: randomTetriminoName = "Prefabs/Tetrimino_Square"; break;
+            case 6: randomTetriminoName = "Prefabs/Tetrimino_T"; break;
+            case 7: randomTetriminoName = "Prefabs/Tetrimino_Z"; break;
+        }
+        return randomTetriminoName;
+    }
+
+    public bool CheckIsInsideGrid(Vector2Int position)
     {
         return (position.x >= 0 && position.x < gridWidth && position.y >= 0);
     }

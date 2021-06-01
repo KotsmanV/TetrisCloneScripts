@@ -13,7 +13,7 @@ public class Tetrimino : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -28,15 +28,20 @@ public class Tetrimino : MonoBehaviour
         {
             transform.position += Vector3.right;
 
-            if (!CheckIsPositionValid())
+            if (CheckIsPositionValid())
+                FindObjectOfType<Game>().UpdateGrid(this);
+            else
                 transform.position += Vector3.left;
+
         }
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             transform.position += Vector3.left;
 
-            if (!CheckIsPositionValid())
+            if (CheckIsPositionValid())
+                FindObjectOfType<Game>().UpdateGrid(this);
+            else
                 transform.position += Vector3.right;
         }
 
@@ -45,8 +50,19 @@ public class Tetrimino : MonoBehaviour
         {
             transform.position += Vector3.down;
 
-            if (!CheckIsPositionValid())
+            if (CheckIsPositionValid())
+                FindObjectOfType<Game>().UpdateGrid(this);
+            else
+            {
                 transform.position += Vector3.up;
+
+                FindObjectOfType<Game>().DeleteRow();
+
+                enabled = false;
+
+                FindObjectOfType<Game>().SpawnNextTetrimino();
+            }
+
 
             fall = math.round(Time.time);
         }
@@ -55,20 +71,23 @@ public class Tetrimino : MonoBehaviour
         {
             transform.Rotate(0, 0, 90);
 
-            if (!CheckIsPositionValid())
+            if (CheckIsPositionValid())
+                FindObjectOfType<Game>().UpdateGrid(this);
+            else
                 transform.Rotate(0, 0, -90);
         }
-
-
     }
 
     bool CheckIsPositionValid()
     {
         foreach (Transform mino in transform)
         {
-            Vector2 position = Vector2Int.RoundToInt(mino.position);
+            Vector2Int position = Vector2Int.RoundToInt(mino.position);
 
             if (!FindObjectOfType<Game>().CheckIsInsideGrid(position))
+                return false;
+
+            if (FindObjectOfType<Game>().GetTransformAtGridPosition(position) != null && FindObjectOfType<Game>().GetTransformAtGridPosition(position).parent != transform)
                 return false;
         }
         return true;
