@@ -2,12 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 public class Game : MonoBehaviour
 {
     public static int gridWidth = 10;
     public static int gridHeight = 20;
+    public static int rowsDeleted = 0;
+    //public Text lines = FindObjectOfType<Text>();
 
     public static Transform[,] grid = new Transform[gridWidth, gridHeight];
 
@@ -15,6 +19,21 @@ public class Game : MonoBehaviour
     void Start()
     {
         SpawnNextTetrimino();
+    }
+
+    public bool CheckIsAboveGrid(Tetrimino tetrimino)
+    {
+        for (int x = 0; x < gridWidth; ++x)
+        {
+            foreach (Transform mino in tetrimino.transform)
+            {
+                Vector2Int position = Vector2Int.RoundToInt(mino.position);
+
+                if (position.y > gridHeight - 1)
+                    return true;
+            }
+        }
+        return false;
     }
 
     public bool IsRowFullAt(int y)
@@ -66,11 +85,12 @@ public class Game : MonoBehaviour
                 DeleteMinoAt(y);
                 MoveAllRowsDown(y + 1);
                 --y;
+                rowsDeleted++;
+
+                FindObjectOfType<Text>().text = $"Lines\n{rowsDeleted}";
             }
         }
     }
-
-
 
     public void UpdateGrid(Tetrimino tetrimino)
     {
@@ -125,6 +145,11 @@ public class Game : MonoBehaviour
     public bool CheckIsInsideGrid(Vector2Int position)
     {
         return (position.x >= 0 && position.x < gridWidth && position.y >= 0);
+    }
+
+    public void GameOver()
+    {
+        SceneManager.LoadScene("GameOver");
     }
 
 }
