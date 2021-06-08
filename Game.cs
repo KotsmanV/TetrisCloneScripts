@@ -15,10 +15,50 @@ public class Game : MonoBehaviour
 
     public static Transform[,] grid = new Transform[gridWidth, gridHeight];
 
-    // Start is called before the first frame update
+    public int scoreOneLine = 40;
+    public int scoreTwoLines = 100;
+    public int scoreThreeLines = 300;
+    public int scoreFourLines = 500;
+
+    private int numberOfRowsThisTurn = 0;
+
+    public Text hud_score;
+    //public Text lines = FindObjectOfType<Text>().;
+    private int currentScore = 0 ;
+
     void Start()
     {
         SpawnNextTetrimino();
+    }
+
+    private void Update()
+    {
+        UpdateScore();
+        UpdateUI();
+    }
+
+    public void UpdateScore()
+    {
+        if (numberOfRowsThisTurn != 0)
+        {
+            switch (numberOfRowsThisTurn)
+            {
+                case 1:
+                    currentScore += scoreOneLine; break;
+                case 2:
+                    currentScore += scoreTwoLines; break;
+                case 3:
+                    currentScore += scoreThreeLines; break;
+                case 4:
+                    currentScore += scoreFourLines; break;         
+            }
+        }
+        numberOfRowsThisTurn = 0;
+    }
+
+    public void UpdateUI()
+    {
+        hud_score.text = currentScore.ToString();
     }
 
     public bool CheckIsAboveGrid(Tetrimino tetrimino)
@@ -43,6 +83,7 @@ public class Game : MonoBehaviour
             if (grid[x, y] == null)
                 return false;
         }
+        numberOfRowsThisTurn++;
         return true;
     }
 
@@ -87,7 +128,7 @@ public class Game : MonoBehaviour
                 --y;
                 rowsDeleted++;
 
-                FindObjectOfType<Text>().text = $"Lines\n{rowsDeleted}";
+                //lines.text = $"Lines\n{rowsDeleted}";
             }
         }
     }
