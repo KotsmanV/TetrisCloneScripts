@@ -11,7 +11,6 @@ public class Game : MonoBehaviour
     public static int gridWidth = 10;
     public static int gridHeight = 20;
     public static int rowsDeleted = 0;
-    //public Text lines = FindObjectOfType<Text>();
 
     public static Transform[,] grid = new Transform[gridWidth, gridHeight];
 
@@ -20,11 +19,22 @@ public class Game : MonoBehaviour
     public int scoreThreeLines = 300;
     public int scoreFourLines = 500;
 
+    public int currentLevel = 0;
+    private int linesCleared = 0;
+
+    public float fallSpeed = 1.0f;
+
     private int numberOfRowsThisTurn = 0;
 
     public Text hud_score;
-    //public Text lines = FindObjectOfType<Text>().;
-    private int currentScore = 0 ;
+    public static int currentScore = 0 ;
+
+    private GameObject previewTetrimino;
+    private GameObject nextTetrimino;
+
+    private bool gameStarted = false;
+
+    private Vector2 previewTetriminoPosition = new Vector2(-6.5f, 15);
 
     void Start()
     {
@@ -35,25 +45,76 @@ public class Game : MonoBehaviour
     {
         UpdateScore();
         UpdateUI();
+
+        UpdateLevel();
+        UpdateSpeed();
+    }
+
+    void UpdateLevel()
+    {
+        currentLevel = linesCleared / 10;
+        Debug.Log("Current level: " + currentLevel);
+    }
+    
+    void UpdateSpeed()
+    {
+        fallSpeed = 1.0f - currentLevel * 0.1f;
+        Debug.Log("Current fall speed: " + fallSpeed);
     }
 
     public void UpdateScore()
     {
-        if (numberOfRowsThisTurn != 0)
+        if (numberOfRowsThisTurn > 0)
         {
-            switch (numberOfRowsThisTurn)
+            if (numberOfRowsThisTurn == 1)
             {
-                case 1:
-                    currentScore += scoreOneLine; break;
-                case 2:
-                    currentScore += scoreTwoLines; break;
-                case 3:
-                    currentScore += scoreThreeLines; break;
-                case 4:
-                    currentScore += scoreFourLines; break;         
+                OneLine();
+                //currentScore += scoreOneLine;
+                //linesCleared++;
             }
+            else if (numberOfRowsThisTurn == 2)
+            {
+                currentScore += scoreTwoLines;
+                linesCleared += 2;
+            }
+            else if (numberOfRowsThisTurn == 3)
+            {
+                currentScore += scoreThreeLines;
+                linesCleared += 3;
+            }
+            else if (numberOfRowsThisTurn == 4)
+            {
+                currentScore += scoreFourLines;
+                linesCleared += 4;
+            }
+            numberOfRowsThisTurn = 0;
+            //switch (numberOfRowsThisTurn)
+            //{
+            //    case 1: currentScore += scoreOneLine;
+            //            linesCleared += 1;
+            //            break;
+
+            //    case 2: currentScore += scoreTwoLines;
+            //            linesCleared += 2;
+            //            break;
+
+            //    case 3: currentScore += scoreThreeLines;
+            //            linesCleared += 3;
+            //            break;
+
+            //    case 4: currentScore += scoreFourLines;
+            //            linesCleared += 4;
+            //            break;         
+            //}
+
         }
-        numberOfRowsThisTurn = 0;
+
+    }
+
+    public void OneLine()
+    {
+        currentScore += scoreOneLine;
+        linesCleared++;
     }
 
     public void UpdateUI()
@@ -126,9 +187,7 @@ public class Game : MonoBehaviour
                 DeleteMinoAt(y);
                 MoveAllRowsDown(y + 1);
                 --y;
-                rowsDeleted++;
-
-                //lines.text = $"Lines\n{rowsDeleted}";
+                rowsDeleted++;                              
             }
         }
     }
@@ -161,7 +220,24 @@ public class Game : MonoBehaviour
 
     public void SpawnNextTetrimino()
     {
-        GameObject nextTetrimino = (GameObject)Instantiate(Resources.Load(GetRandomTetrimino()), new Vector2(4.0f, 20.0f), Quaternion.identity);
+        if (!gameStarted)
+        {
+            gameStarted = true;
+
+            nextTetrimino = (GameObject)Instantiate(Resources.Load(GetRandomTetrimino()), new Vector2(4.0f, 20.0f), Quaternion.identity);
+            previewTetrimino = (GameObject)Instantiate(Resources.Load(GetRandomTetrimino()), previewTetriminoPosition, Quaternion.identity);
+            previewTetrimino.GetComponent<Tetrimino>().enabled = false;
+        }
+        else
+        {
+            previewTetrimino.transform.localPosition = new Vector2(4.0f, 20.0f);
+            nextTetrimino = previewTetrimino;
+            nextTetrimino.GetComponent<Tetrimino>().enabled = true;
+
+            previewTetrimino = (GameObject)Instantiate(Resources.Load(GetRandomTetrimino()), previewTetriminoPosition, Quaternion.identity);
+            previewTetrimino.GetComponent<Tetrimino>().enabled = false;
+        }
+
     }
 
     private string GetRandomTetrimino()
